@@ -4,6 +4,7 @@ metadata:
   labels:
     app: microservice-app-example
   name: redis-queue
+  namespace: team5
 spec:
   replicas: 1
   template:
@@ -12,10 +13,27 @@ spec:
         app: microservice-app-example
         service: redis-queue
     spec:
+      restartPolicy: Always
       containers:
       - env:
         image: redis
         name: redis-queue
         ports:
         - containerPort: 6379
-      restartPolicy: Always
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        volumeMounts:
+        - mountPath: "/var/lib/redis"
+          name: redis-data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis
